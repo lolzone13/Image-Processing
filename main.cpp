@@ -59,10 +59,58 @@ class Dithering : public olc::PixelGameEngine {
 
 			std::transform(m_pImage->pColData.begin(), m_pImage->pColData.end(), m_pQuantised->pColData.begin(), Quantize_RGB_nbit);
 
-			Floyd_Steinberg_Dithering(m_pImage.get(), m_pDithered.get(), Quantize_RGB_nbit);
+			// Error Diffusion Dithering
+
+			//Floyd_Steinberg_Dithering(m_pImage.get(), m_pDithered.get(), Quantize_RGB_nbit);
+			//JJN_Dithering(m_pImage.get(), m_pDithered.get(), Quantize_RGB_nbit);
+			Stucki_Dithering(m_pImage.get(), m_pDithered.get(), Quantize_RGB_nbit);
 
 
 			return true;
+		}
+		// Jarvis, Judice and Ninke
+		void JJN_Dithering(const olc::Sprite* src, olc::Sprite* dest, std::function<olc::Pixel(const olc::Pixel)> funcQuantize) {
+			std::copy(src->pColData.begin(), src->pColData.end(), dest->pColData.begin());
+
+			olc::vi2d vPixel;
+			for (vPixel.y = 0; vPixel.y < src->height; vPixel.y++) {
+				for (vPixel.x = 0; vPixel.x < src->width; vPixel.x++) {
+					olc::Pixel op = dest->GetPixel(vPixel);
+					olc::Pixel qp = funcQuantize(op);
+					int32_t qError[3] = {
+						op.r - qp.r,
+						op.g - qp.g,
+						op.b - qp.b
+					};
+
+					dest->SetPixel(vPixel, qp);
+
+					auto UpdatePixel = [&vPixel, &qError, &dest](const olc::vi2d& vOffset, const float fErrorBias) {
+						olc::Pixel p = dest->GetPixel(vPixel + vOffset);
+						int32_t k[3] = { 
+							p.r + int32_t(float(qError[0] * fErrorBias)),
+							p.g + int32_t(float(qError[1] * fErrorBias)),
+							p.b + int32_t(float(qError[2] * fErrorBias))
+						};
+
+						dest->SetPixel(vPixel + vOffset, olc::Pixel(std::clamp(k[0], 0, 255), std::clamp(k[1], 0, 255), std::clamp(k[2], 0, 255)));
+					};
+
+					UpdatePixel({ 0,2 }, 5.0f / 48.0f);
+					UpdatePixel({ 2,0 }, 5.0f / 48.0f);
+					UpdatePixel({ 1,0 }, 7.0f / 48.0f);
+					UpdatePixel({ 0,1 }, 7.0f / 48.0f);
+					UpdatePixel({ -1,1 }, 5.0f / 48.0f);
+					UpdatePixel({ 1,1 }, 5.0f / 48.0f);
+					UpdatePixel({ 2,1 }, 3.0f / 48.0f);
+					UpdatePixel({ -2,1 }, 3.0f / 48.0f);
+					UpdatePixel({ -2,2 }, 1.0f / 48.0f);
+					UpdatePixel({ 2,2 }, 1.0f / 48.0f);
+					UpdatePixel({ 1,2 }, 3.0f / 48.0f);
+					UpdatePixel({ -1,2 }, 3.0f / 48.0f);
+				}
+			}
+
 		}
 
 		void Floyd_Steinberg_Dithering(const olc::Sprite* src, olc::Sprite* dest, std::function<olc::Pixel(const olc::Pixel)> funcQuantize) {
@@ -98,6 +146,49 @@ class Dithering : public olc::PixelGameEngine {
 					UpdatePixel({ 1,1 }, 1.0f / 16.0f);
 				}
 			}
+		}
+
+		void Stucki_Dithering(const olc::Sprite* src, olc::Sprite* dest, std::function<olc::Pixel(const olc::Pixel)> funcQuantize) {
+			std::copy(src->pColData.begin(), src->pColData.end(), dest->pColData.begin());
+
+			olc::vi2d vPixel;
+			for (vPixel.y = 0; vPixel.y < src->height; vPixel.y++) {
+				for (vPixel.x = 0; vPixel.x < src->width; vPixel.x++) {
+					olc::Pixel op = dest->GetPixel(vPixel);
+					olc::Pixel qp = funcQuantize(op);
+					int32_t qError[3] = {
+						op.r - qp.r,
+						op.g - qp.g,
+						op.b - qp.b
+					};
+
+					dest->SetPixel(vPixel, qp);
+
+					auto UpdatePixel = [&vPixel, &qError, &dest](const olc::vi2d& vOffset, const float fErrorBias) {
+						olc::Pixel p = dest->GetPixel(vPixel + vOffset);
+						int32_t k[3] = { p.r + int32_t(float(qError[0] * fErrorBias)),
+							p.g + int32_t(float(qError[1] * fErrorBias)),
+							p.b + int32_t(float(qError[2] * fErrorBias))
+						};
+
+						dest->SetPixel(vPixel + vOffset, olc::Pixel(std::clamp(k[0], 0, 255), std::clamp(k[1], 0, 255), std::clamp(k[2], 0, 255)));
+					};
+
+					UpdatePixel({ 2,0 }, 4.0f / 42.0f);
+					UpdatePixel({ 1,0 }, 8.0f / 42.0f);
+					UpdatePixel({ 0,2 }, 4.0f / 42.0f);
+					UpdatePixel({ 0,1 }, 8.0f / 42.0f);
+					UpdatePixel({ -1,1 }, 4.0f / 42.0f);
+					UpdatePixel({ 1,1 }, 4.0f / 42.0f);
+					UpdatePixel({ 2,1 }, 2.0f / 42.0f);
+					UpdatePixel({ -2,1 }, 2.0f / 42.0f);
+					UpdatePixel({ -2,2 }, 1.0f / 42.0f);
+					UpdatePixel({ 2,2 }, 1.0f / 42.0f);
+					UpdatePixel({ 1,2 }, 2.0f / 42.0f);
+					UpdatePixel({ -1,2 }, 2.0f / 42.0f);
+				}
+			}
+
 		}
 
 		bool OnUserUpdate(float fElapsedTime) override {
