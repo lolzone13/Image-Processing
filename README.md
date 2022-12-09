@@ -1,2 +1,2 @@
 # Image Dithering Algorithms
-The C++ implementation of the Several Dithering Algorithms using the olcPixelGameEngine.
+The C++ implementation of several Image Dithering Algorithms using the olcPixelGameEngine.
