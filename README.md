@@ -1,2 +1,2 @@
-# Floyd-Steinberg-Dithering
-The C++ implementation of the Floyd-Steinberg-Dithering algorithm
+# Image Dithering Algorithms
+The C++ implementation of several Image Dithering Algorithms using the olcPixelGameEngine.
