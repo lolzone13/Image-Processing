@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+*.sln
+*.vcxproj*
+.vs
+/x64
