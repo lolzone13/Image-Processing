@@ -27,11 +27,57 @@ class Dithering : public olc::PixelGameEngine {
 
 	public: 
 
+		void Convolution(const olc::Sprite* src, olc::Sprite* dest, vector<vector<float>> kernelInput = {}) {
+			//vector<vector<float>> kernel = { 
+			//	{0.0f, 0.125f, 0.0f }, 
+			//	{0.125f, 0.5f, 0.125f}, 
+			//	{0.0f, 0.125f, 0.0f}
+			//};
+			vector<vector<float>> kernel = {
+				{0.111f, 0.111f, 0.111f },
+				{0.111f, 0.111f, 0.111f},
+				{0.111f, 0.111f, 0.111f}
+			};
+			vector<vector<float>> kernelBlur = {
+				{0,    0,    0,      0,      0,      0,      0},
+				{0,    2025, 6120,   8145,   6120,   2025,   0},
+				{0,    6120, 18496,  24616,  18496,  6120,   0},
+				{0,    8145, 24616,  32761,  24616,  8145,   0},
+				{0,    6120, 18496,  24616,  18496,  6120,   0},
+				{0,    2025, 6120,   8145,   6120,   2025,   0},
+				{0,    0,    0,      0,      0,      0,      0}
+			};
+			int nDim = kernel.size();
+			int dim = nDim / 2;
+			std::copy(src->pColData.begin(), src->pColData.end(), dest->pColData.begin());
+
+			olc::vi2d vPixel;
+			for (vPixel.y = 0; vPixel.y < src->height; vPixel.y++) {
+				for (vPixel.x = 0; vPixel.x < src->width; vPixel.x++) {
+					olc::Pixel op = dest->GetPixel(vPixel);
+
+					olc::Pixel cp = op;
+					float conv_sum[3] = { 0.0f, 0.0f, 0.0f };
+					for (int i = -dim; i <= dim; i++) {
+						for (int j = -dim; j <= dim; j++) {
+							olc::vi2d vOffset = { i,j };
+							olc::Pixel tp = src->GetPixel(vPixel + vOffset);
+							conv_sum[0] += float(tp.r) * kernel[i + dim][j + dim];
+							conv_sum[1] += float(tp.g) * kernel[i + dim][j + dim];
+							conv_sum[2] += float(tp.b) * kernel[i + dim][j + dim];
+						}
+					}
+					
+					dest->SetPixel(vPixel, olc::Pixel(std::clamp(int(conv_sum[0]), 0, 255), std::clamp(int(conv_sum[1]), 0, 255), std::clamp(int(conv_sum[2]), 0, 255)));
+				}
+			}
+		}
+
 		bool OnUserCreate() override {
 
 			tv.Initialise({ ScreenWidth(), ScreenHeight() });
 
-			cout << "Dithering!!!" << endl;
+			cout << "Image Processing!!!" << endl;
 			m_pImage = std::make_unique<olc::Sprite>("image.jpg");
 			m_pQuantised = std::make_unique<olc::Sprite>(m_pImage->width, m_pImage->height);
 			m_pDithered = std::make_unique<olc::Sprite>(m_pImage->width, m_pImage->height);
@@ -43,7 +89,7 @@ class Dithering : public olc::PixelGameEngine {
 			};
 
 			// transform to grayscale
-			// std::transform(m_pImage->pColData.begin(), m_pImage->pColData.end(), m_pImage->pColData.begin(), Convert_RGB_to_Grayscale);
+			//std::transform(m_pImage->pColData.begin(), m_pImage->pColData.end(), m_pImage->pColData.begin(), Convert_RGB_to_Grayscale);
 
 
 			// quantize grayscale
@@ -64,14 +110,13 @@ class Dithering : public olc::PixelGameEngine {
 			std::transform(m_pImage->pColData.begin(), m_pImage->pColData.end(), m_pQuantised->pColData.begin(), Quantize_RGB_nbit);
 
 			// Error Diffusion Dithering
-
-			Floyd_Steinberg_Dithering(m_pImage.get(), m_pDithered.get(), Quantize_RGB_nbit);
+			//Floyd_Steinberg_Dithering(m_pImage.get(), m_pDithered.get(), Quantize_RGB_nbit);
 			//JJN_Dithering(m_pImage.get(), m_pDithered.get(), Quantize_RGB_nbit);
 			//Stucki_Dithering(m_pImage.get(), m_pDithered.get(), Quantize_RGB_nbit);
 
 			// Ordered Dithering
 			//Ordered_Dithering(m_pImage.get(), m_pDithered.get(), Quantize_RGB_nbit);
-
+			Convolution(m_pImage.get(), m_pDithered.get());
 
 			return true;
 		}
