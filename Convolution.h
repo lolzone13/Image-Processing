@@ -73,7 +73,7 @@ void Sobel_Edge_Detection(const olc::Sprite* src, olc::Sprite* dest) {
 	Convolution(src, dest, vertical_kernel);
 
 	std::unique_ptr<olc::Sprite> m_pTemp;
-	m_pTemp = std::make_unique<olc::Sprite>(m_pImage->width, m_pImage->height);
+	m_pTemp = std::make_unique<olc::Sprite>(1280, 960);
 
 
 	vector<vector<float>> horizontal_kernel = {
