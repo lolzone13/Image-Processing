@@ -62,4 +62,41 @@ void Convolution(const olc::Sprite* src, olc::Sprite* dest, vector<vector<float>
 }
 
 
+void Sobel_Edge_Detection(const olc::Sprite* src, olc::Sprite* dest) {
+
+	vector<vector<float>> vertical_kernel =
+	{
+			{-1.0f, 0.0f, +1.0f},
+			{-2.0f, 0.0f, +2.0f},
+			{-1.0f, 0.0f, +1.0f}
+	};
+	Convolution(src, dest, vertical_kernel);
+
+	std::unique_ptr<olc::Sprite> m_pTemp;
+	m_pTemp = std::make_unique<olc::Sprite>(m_pImage->width, m_pImage->height);
+
+
+	vector<vector<float>> horizontal_kernel = {
+		{-1.0f, -2.0f, -1.0f},
+		{ 0.0f, 0.0f, 0.0f},
+		{+1.0f, +2.0f, +1.0f}
+	};
+	Convolution(src, m_pTemp.get(), horizontal_kernel);
+
+	olc::vi2d vPixel;
+	for (vPixel.y = 0; vPixel.y < src->height; vPixel.y++) {
+		for (vPixel.x = 0; vPixel.x < src->width; vPixel.x++) {
+			olc::Pixel op = dest->GetPixel(vPixel);
+
+			olc::Pixel ep = m_pTemp.get()->GetPixel(vPixel);
+
+			op.r = (op.r + ep.r) / 2.0f;
+			op.g = (op.g + ep.g) / 2.0f;
+			op.b = (op.b + ep.b) / 2.0f;
+
+			dest->SetPixel(vPixel, olc::Pixel(std::clamp(int(op.r), 0, 255), std::clamp(int(op.g), 0, 255), std::clamp(int(op.b), 0, 255)));
+		}
+	}
+}
+
 #endif // !CONVOLUTION_H
