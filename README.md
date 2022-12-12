@@ -23,7 +23,7 @@ The C++ implementation of several Image Processing Algorithms using the olcPixel
 #### Gaussian Blurred Image:
 ![Gaussian Blurred Image](https://github.com/lolzone13/Image-Processing/blob/main/assets/Gaussian_Blur.png)
 
-### Sobel Edge Detection
+#### Sobel Edge Detection
 ![Edge Detected Image](https://github.com/lolzone13/Image-Processing/blob/main/assets/Sobel_Edge_Detection.png)
 
 
