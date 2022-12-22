@@ -6,11 +6,13 @@
 
 #include "Dithering.h"
 #include "Convolution.h"
+#include "ContrastModification.h"
 
 #include <iostream>
-
+#include <algorithm>
 
 using namespace std;
+
 
 class ImageProcessing : public olc::PixelGameEngine {
 
@@ -27,6 +29,9 @@ class ImageProcessing : public olc::PixelGameEngine {
 		std::unique_ptr<olc::Sprite> m_pBlurred;
 		std::unique_ptr<olc::Sprite> m_pEdge;
 		std::unique_ptr<olc::Sprite> m_pGray;
+		std::unique_ptr<olc::Sprite> m_pHighContrast;
+		std::unique_ptr<olc::Sprite> m_pHistEqualized;
+		
 	public: 
 
 		bool OnUserCreate() override {
@@ -40,6 +45,9 @@ class ImageProcessing : public olc::PixelGameEngine {
 			m_pBlurred = std::make_unique<olc::Sprite>(m_pImage->width, m_pImage->height);
 			m_pEdge = std::make_unique<olc::Sprite>("image.jpg");
 			m_pGray = std::make_unique<olc::Sprite>(m_pImage->width, m_pImage->height);
+
+			m_pHighContrast = std::make_unique<olc::Sprite>("low_contrast_rgb.jpeg");
+			m_pHistEqualized = std::make_unique<olc::Sprite>(m_pHighContrast->width, m_pHighContrast->height);
 
 			auto Convert_RGB_to_Grayscale = [](const olc::Pixel in) {
 				uint8_t grayscale = uint8_t(0.2162f * float(in.r) + (0.7152f) * float(in.g) + 0.0722f * float(in.b));
@@ -89,7 +97,10 @@ class ImageProcessing : public olc::PixelGameEngine {
 			std::transform(m_pEdge->pColData.begin(), m_pEdge->pColData.end(), m_pGray->pColData.begin(), Convert_RGB_to_Grayscale);
 			Sobel_Edge_Detection(m_pGray.get(), m_pEdge.get());
 
-		
+			// Histogram Equalization
+			Histogram_Equalization(m_pHighContrast.get(), m_pHistEqualized.get());
+			
+
 			return true;
 		}
 
@@ -109,6 +120,10 @@ class ImageProcessing : public olc::PixelGameEngine {
 				tv.DrawSprite({ 0, 0 }, m_pEdge.get());
 			else if (GetKey(olc::Key::T).bHeld)
 				tv.DrawSprite({ 0, 0 }, m_pGray.get());
+			else if (GetKey(olc::Key::Y).bHeld)
+				tv.DrawSprite({ 0, 0 }, m_pHistEqualized.get());
+			else if (GetKey(olc::Key::U).bHeld)
+				tv.DrawSprite({ 0, 0 }, m_pHighContrast.get());
 			else
 				tv.DrawSprite({ 0,0 }, m_pImage.get());
 			return true;
