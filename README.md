@@ -26,7 +26,9 @@ The C++ implementation of several Image Processing Algorithms using the olcPixel
 #### Sobel Edge Detection
 ![Edge Detected Image](https://github.com/lolzone13/Image-Processing/blob/main/assets/Sobel_Edge_Detection.png)
 
+#### Low Contrast Image
+![Low Contrast Image](https://github.com/lolzone13/Image-Processing/blob/main/assets/low_contrast.png)
 
-
-
+#### Histogram Equalized
+![Low Contrast Image](https://github.com/lolzone13/Image-Processing/blob/main/assets/histogram_equalized.png)
 
